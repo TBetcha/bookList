@@ -58,6 +58,56 @@ class UI {
 	}
 }
 
+//local storage class
+class Store {
+	static getBooks() {
+		let books;
+		if (localStorage.getItem('books') === null) {
+			books = [];
+		} else {
+			//want JSON obj so wrap in JSON.parse
+			books = JSON.parse(localStorage.getItem('books'));
+		}
+
+		return books;
+	}
+
+	static displayBooks() {
+		const books = Store.getBooks();
+
+		books.forEach(function (book) {
+			const ui = new UI();
+
+			//add book to UI
+			ui.addBookToList(book);
+		});
+	}
+
+	static addBook(book) {
+		//use class name because its a static method
+		const books = Store.getBooks();
+
+		books.push(book);
+
+		//once again make JSON to store in local storage
+		localStorage.setItem('books', JSON.stringify(books));
+	}
+
+	static removeBook(isbn) {
+		console.log(isbn);
+
+		const books = Store.getBooks();
+
+		books.forEach(function (book, index) {
+			if (book.isbn === isbn) {
+				books.splice(index, 1);
+			}
+		});
+
+		localStorage.setItem('books', JSON.stringify(books));
+	}
+}
+
 //Event listener or add book
 document.getElementById('book-form').addEventListener('submit', function (e) {
 	console.log('test');
@@ -81,6 +131,9 @@ document.getElementById('book-form').addEventListener('submit', function (e) {
 		//add book to list
 		ui.addBookToList(book);
 
+		//add to local storage
+		Store.addBook(book);
+
 		//show success
 		ui.showAlert('Book successfully added', 'success');
 
@@ -92,12 +145,18 @@ document.getElementById('book-form').addEventListener('submit', function (e) {
 	e.preventDefault();
 });
 
+//DOM Load event
+document.addEventListener('DOMContentLoaded', Store.displayBooks);
+
 //event listener for book deletion
 document.getElementById('book-list').addEventListener('click', function (e) {
 	//instantiate ui
 	const ui = new UI();
 
 	ui.deleteBook(e.target);
+
+	//remove from local storage
+	Store.removeBook(e.target.parentElement.previousElementSibling.textContent);
 
 	//show message
 	ui.showAlert('Book Removed', 'success');
